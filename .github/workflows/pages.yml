@@ -26,6 +26,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Enhance website photos
+        run: python .github/enhance-images.py
+
       - name: Upload website
         uses: actions/upload-pages-artifact@v4
         with:
