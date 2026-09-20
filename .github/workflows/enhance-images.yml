@@ -1,0 +1,74 @@
+name: Enhance SOMSI website photos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'realizace-*.jpg'
+      - 'realizace-hlavni.jpg'
+      - 'index.html'
+      - '.github/workflows/enhance-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  enhance:
+    if: ${{ !contains(github.event.head_commit.message, '[somsi-photo-enhance]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare image tools
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Enhance and sharpen photos
+        run: |
+          python - <<'PY'
+          from PIL import Image, ImageFilter, ImageEnhance
+          from pathlib import Path
+
+          files = [Path('realizace-hlavni.jpg')] + [Path(f'realizace-{i}.jpg') for i in range(1, 7)]
+          for p in files:
+              if not p.exists():
+                  continue
+              im = Image.open(p).convert('RGB')
+              w, h = im.size
+              scale = 2 if max(w, h) >= 1000 else 4
+              im = im.resize((w * scale, h * scale), Image.Resampling.LANCZOS)
+              im = im.filter(ImageFilter.MedianFilter(size=3))
+              im = ImageEnhance.Contrast(im).enhance(1.07)
+              im = ImageEnhance.Color(im).enhance(1.07)
+              im = ImageEnhance.Brightness(im).enhance(1.01)
+              im = im.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
+              if p.name == 'realizace-hlavni.jpg':
+                  im = im.resize((1348, 1030), Image.Resampling.LANCZOS)
+              im.save(p, 'JPEG', quality=90, optimize=True, progressive=True)
+          PY
+
+      - name: Improve image presentation on the live site
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          s = s.replace('.card img{width:100%;height:185px;object-fit:cover;display:block}', '.card img{width:100%;height:185px;object-fit:cover;object-position:center;display:block;filter:contrast(1.05) saturate(1.05);image-rendering:auto}')
+          s = s.replace('.gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:.3s}', '.gallery img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:.3s;filter:contrast(1.06) saturate(1.06);image-rendering:auto}')
+          s = s.replace('.split img{width:100%;border-radius:12px;box-shadow:0 15px 45px rgba(0,0,0,.13);display:block}', '.split img{width:100%;border-radius:12px;box-shadow:0 15px 45px rgba(0,0,0,.13);display:block;filter:contrast(1.05) saturate(1.04);image-rendering:auto}')
+          s = s.replace('.hero{min-height:650px;display:flex;align-items:center;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18)),url("realizace-hlavni.jpg") center/cover}', '.hero{min-height:650px;display:flex;align-items:center;position:relative;isolation:isolate;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18))}.hero::before{content:"";position:absolute;inset:0;z-index:-2;background:url("realizace-hlavni.jpg") center/cover no-repeat;filter:contrast(1.08) saturate(1.07);transform:scale(1.002)}.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18));pointer-events:none}.heroText{position:relative;z-index:1}')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit enhanced website assets
+        run: |
+          git config user.name 'somsi-stavby'
+          git config user.email 'blehazdenda@gmail.com'
+          git add realizace-*.jpg index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Vylepšení a doostření fotografií [somsi-photo-enhance]'
+          git push
