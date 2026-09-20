@@ -26,6 +26,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Install photo enhancement tools
+        run: python -m pip install --disable-pip-version-check pillow
+
       - name: Enhance website photos
         run: python .github/enhance-images.py
 
