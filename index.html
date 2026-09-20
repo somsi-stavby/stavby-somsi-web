@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#111820">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://stavbysomsi.cz/">
+<link rel="preload" as="image" href="realizace-hlavni.jpg" fetchpriority="high">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="cs_CZ">
 <meta property="og:title" content="SOMSI stavební práce | Od základu po střechu">
@@ -93,7 +94,7 @@ footer{background:#0b1116;color:#fff;padding:30px 0}.foot{display:flex;justify-c
 <a class="mobileCta" href="tel:+420736771754">☎ Zavolat – +420 736 771 754</a>
 <button class="chatFab" id="chatFab" type="button" aria-label="Otevřít rychlý kontakt" aria-expanded="false" onclick="toggleChat()">💬<span></span></button>
 <div class="chatPanel" id="chatPanel" role="dialog" aria-label="Rychlý kontakt"><div class="chatHead"><div><strong>Rychlý kontakt SOMSI</strong><small>Pošlete krátkou zprávu</small></div><button class="chatClose" type="button" aria-label="Zavřít" onclick="toggleChat(false)">×</button></div><div class="chatBody"><p class="chatIntro">Napište nám, co plánujete postavit nebo rekonstruovat.</p><label>Jméno<input id="chatName" autocomplete="name" placeholder="Vaše jméno"></label><label>Telefon<input id="chatPhone" type="tel" autocomplete="tel" placeholder="+420 …"></label><label>Zpráva<textarea id="chatMessage" placeholder="Dobrý den, potřebuji…"></textarea></label><div class="chatActions"><button class="btn primary" type="button" onclick="sendChat()">Odeslat přes WhatsApp →</button></div><div class="chatLinks"><a href="tel:+420736771754">☎ Zavolat</a><a href="mailto:petrsomsi@seznam.cz">✉ E-mail</a></div><p class="chatHint">WhatsApp se otevře s připravenou zprávou. Odeslání potvrdíte sami.</p></div></div>
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Náhled fotografie" onclick="this.classList.remove('open')"><button class="close" type="button" aria-label="Zavřít">×</button><img id="mi" alt=""></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Náhled fotografie" onclick="this.classList.remove('open')"><button class="close" type="button" aria-label="Zavřít">×</button><img id="mi" alt="" loading="lazy" decoding="async"></div>
 <script>
 document.getElementById('y').textContent=new Date().getFullYear();
 function toggleNav(btn){const nav=document.querySelector('nav');const open=nav.classList.toggle('open');btn.setAttribute('aria-expanded',open?'true':'false')}
