@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://stavbysomsi.cz/sitemap.xml
