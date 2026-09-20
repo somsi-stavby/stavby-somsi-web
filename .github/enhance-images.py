@@ -1,40 +1,63 @@
 from pathlib import Path
 import re
+from PIL import Image, ImageEnhance, ImageFilter
+
+PHOTO_FILES = [
+    Path("realizace-hlavni.jpg"),
+    *[Path(f"realizace-{i}.jpg") for i in range(1, 7)],
+]
+
+# Enhance the source assets only in the Pages build workspace.
+# The repository originals stay untouched, so sharpening is never compounded.
+for path in PHOTO_FILES:
+    if not path.exists():
+        continue
+    with Image.open(path) as src:
+        im = src.convert("RGB")
+        # Gentle detail enhancement without the old median blur.
+        im = ImageEnhance.Contrast(im).enhance(1.04)
+        im = ImageEnhance.Color(im).enhance(1.03)
+        im = im.filter(ImageFilter.UnsharpMask(radius=1.15, percent=165, threshold=2))
+        im.save(path, "JPEG", quality=94, optimize=True, progressive=True)
 
 p = Path("index.html")
 s = p.read_text(encoding="utf-8")
 
-# Final live-photo presentation: match the sharp reference composition on mobile,
-# avoid the previous SVG filter fallback, and bust CDN/browser image cache.
-css = '''
-<style id="somsi-photo-final">
-/* SOMSI – final photo presentation */
-.card img,
-.gallery img,
-.split img,
-.modal img {
-  filter: contrast(1.10) saturate(1.08) brightness(1.02) !important;
-  image-rendering: auto;
-  object-position: center center;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-.card img { height: 185px !important; }
-@media (max-width:560px) {
-  .card img { height: 138px !important; }
-}
-</style>
-'''
+# Remove the old SVG convolution filter and all references to it.
+s = re.sub(r'<svg[^>]*>\s*(?:<defs>)?\s*<filter[^>]*id=["\']somsiSharpen["\'][\s\S]*?</filter>\s*(?:</defs>)?\s*</svg>', '', s, flags=re.I)
+s = re.sub(r'filter:url\(#somsiSharpen\)\s*', '', s, flags=re.I)
 
-# Replace any previous final override so deployment is deterministic.
+# Use ordinary CSS presentation; no SVG sharpening fallback is needed.
+s = re.sub(
+    r'(\.card img\{[^}]*?)filter:[^;}]+;([^}]*\})',
+    r'\1filter:contrast(1.04) saturate(1.03);\2',
+    s,
+    flags=re.S,
+)
+s = re.sub(
+    r'(\.gallery img\{[^}]*?)filter:[^;}]+;([^}]*\})',
+    r'\1filter:contrast(1.05) saturate(1.04);\2',
+    s,
+    flags=re.S,
+)
+s = re.sub(
+    r'(\.split img\{[^}]*?)filter:[^;}]+;([^}]*\})',
+    r'\1filter:contrast(1.04) saturate(1.03);\2',
+    s,
+    flags=re.S,
+)
+
+# Remove any previously generated final override block.
 s = re.sub(r'<style id="somsi-photo-final">.*?</style>\s*', '', s, flags=re.S)
-s = s.replace('</style>', css + '</style>', 1)
 
-# Force the live site/CDN to request the current photo assets again.
-version = '20260920-photos-final'
-for name in ['realizace-1.jpg','realizace-2.jpg','realizace-3.jpg','realizace-4.jpg','realizace-5.jpg','realizace-6.jpg','realizace-hlavni.jpg']:
-    s = s.replace(f'src="{name}"', f'src="{name}?v={version}"')
-    s = s.replace(f'url("{name}")', f'url("{name}?v={version}")')
+version = "20260920-photos-v2"
+for name in [
+    "realizace-1.jpg", "realizace-2.jpg", "realizace-3.jpg",
+    "realizace-4.jpg", "realizace-5.jpg", "realizace-6.jpg",
+    "realizace-hlavni.jpg",
+]:
+    # Replace an existing cache-busting version if present, otherwise add one.
+    s = re.sub(rf'{re.escape(name)}(?:\?v=[^\"\') ]+)?', f'{name}?v={version}', s)
 
 p.write_text(s, encoding="utf-8")
-print("SOMSI final live photo presentation applied.")
+print("SOMSI live photo enhancement v2 applied.")
