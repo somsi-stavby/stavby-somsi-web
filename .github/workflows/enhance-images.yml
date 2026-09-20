@@ -1,4 +1,4 @@
-name: Enhance SOMSI website photos
+name: Optimize SOMSI website
 
 on:
   push:
@@ -13,20 +13,20 @@ permissions:
   contents: write
 
 jobs:
-  enhance:
-    if: ${{ !contains(github.event.head_commit.message, '[somsi-photo-enhance]') }}
+  optimize:
+    if: ${{ !contains(github.event.head_commit.message, '[somsi-speed-opt]') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare image tools
+      - name: Install image tools
         run: python -m pip install --disable-pip-version-check pillow
 
-      - name: Enhance and sharpen photos
+      - name: Optimize photographs for web
         run: |
           python - <<'PY'
-          from PIL import Image, ImageFilter, ImageEnhance
+          from PIL import Image
           from pathlib import Path
 
           files = [Path('realizace-hlavni.jpg')] + [Path(f'realizace-{i}.jpg') for i in range(1, 7)]
@@ -34,41 +34,54 @@ jobs:
               if not p.exists():
                   continue
               im = Image.open(p).convert('RGB')
+              max_side = 1800 if p.name != 'realizace-hlavni.jpg' else 1600
               w, h = im.size
-              scale = 2 if max(w, h) >= 1000 else 4
-              im = im.resize((w * scale, h * scale), Image.Resampling.LANCZOS)
-              im = im.filter(ImageFilter.MedianFilter(size=3))
-              im = ImageEnhance.Contrast(im).enhance(1.07)
-              im = ImageEnhance.Color(im).enhance(1.07)
-              im = ImageEnhance.Brightness(im).enhance(1.01)
-              im = im.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
-              if p.name == 'realizace-hlavni.jpg':
-                  im = im.resize((1348, 1030), Image.Resampling.LANCZOS)
-              im.save(p, 'JPEG', quality=90, optimize=True, progressive=True)
+              if max(w, h) > max_side:
+                  scale = max_side / max(w, h)
+                  im = im.resize((round(w * scale), round(h * scale)), Image.Resampling.LANCZOS)
+              im.save(p, 'JPEG', quality=82, optimize=True, progressive=True)
           PY
 
-      - name: Improve image presentation on the live site
+      - name: Add lazy loading and image dimensions
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
 
-          s = s.replace('.card img{width:100%;height:185px;object-fit:cover;display:block}', '.card img{width:100%;height:185px;object-fit:cover;object-position:center;display:block;filter:contrast(1.05) saturate(1.05);image-rendering:auto}')
-          s = s.replace('.gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:.3s}', '.gallery img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:.3s;filter:contrast(1.06) saturate(1.06);image-rendering:auto}')
-          s = s.replace('.split img{width:100%;border-radius:12px;box-shadow:0 15px 45px rgba(0,0,0,.13);display:block}', '.split img{width:100%;border-radius:12px;box-shadow:0 15px 45px rgba(0,0,0,.13);display:block;filter:contrast(1.05) saturate(1.04);image-rendering:auto}')
-          s = s.replace('.hero{min-height:650px;display:flex;align-items:center;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18)),url("realizace-hlavni.jpg") center/cover}', '.hero{min-height:650px;display:flex;align-items:center;position:relative;isolation:isolate;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18))}.hero::before{content:"";position:absolute;inset:0;z-index:-2;background:url("realizace-hlavni.jpg") center/cover no-repeat;filter:contrast(1.08) saturate(1.07);transform:scale(1.002)}.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18));pointer-events:none}.heroText{position:relative;z-index:1}')
+          # Browser should fetch the hero background immediately; below-the-fold <img> files are lazy.
+          def add_lazy(m):
+              tag = m.group(0)
+              if 'loading=' in tag:
+                  return tag
+              return tag[:-1] + ' loading="lazy" decoding="async">'
+
+          s = re.sub(r'<img\b[^>]*>', add_lazy, s, flags=re.I)
+
+          # Keep the page visually identical while avoiding expensive CSS image filters.
+          s = s.replace('filter:contrast(1.04) saturate(1.04);image-rendering:auto;', '')
+          s = s.replace('filter:contrast(1.06) saturate(1.05);image-rendering:auto;', '')
+          s = s.replace('filter:contrast(1.05) saturate(1.04);image-rendering:auto;', '')
+
+          # Preload the hero image so the first screen appears sooner.
+          marker = '<link rel="canonical" href="https://stavbysomsi.cz/">'
+          preload = '<link rel="preload" as="image" href="realizace-hlavni.jpg" fetchpriority="high">'
+          if preload not in s and marker in s:
+              s = s.replace(marker, marker + '\n' + preload)
+
           p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Commit enhanced website assets
+      - name: Commit optimized website
         run: |
           git config user.name 'somsi-stavby'
           git config user.email 'blehazdenda@gmail.com'
-          git add realizace-*.jpg index.html
+          git add realizace-*.jpg index.html .github/workflows/enhance-images.yml
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Vylepšení a doostření fotografií [somsi-photo-enhance]'
+          git commit -m 'Optimalizace rychlosti webu [somsi-speed-opt]'
           git push
