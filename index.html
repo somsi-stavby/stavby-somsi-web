@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOMSI stavební práce | Od základu po střechu</title>
+<meta name="description" content="SOMSI stavební práce. Zkušenosti od roku 2002, rekonstrukce, hrubé stavby, fasády, omítky, obklady, dlažby, podlahy, instalace a stavby na klíč. Pardubický, Královéhradecký kraj a Vysočina.">
+<meta name="theme-color" content="#111820">
+<style>
+:root{--d:#111820;--d2:#1b2630;--o:#f7941d;--w:#fff;--l:#f5f6f7;--t:#18222b;--m:#66727c;--b:#e1e5e8;--max:1180px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--t);line-height:1.55}a{text-decoration:none;color:inherit}.container{max-width:var(--max);margin:auto;padding:0 22px}
+header{position:sticky;top:0;z-index:20;background:rgba(17,24,32,.98);color:#fff;border-bottom:1px solid #34414b}.nav{height:72px;display:flex;align-items:center;justify-content:space-between}.brand{font-weight:900;letter-spacing:.7px}.brand span{display:block;color:var(--o);font-size:10px;letter-spacing:2px}.mark{display:inline-grid;place-items:center;width:38px;height:38px;border:2px solid var(--o);border-radius:6px;color:var(--o);margin-right:9px}.brandline{display:flex;align-items:center}nav{display:flex;gap:20px;align-items:center;font-size:14px;font-weight:750}nav a:hover{color:var(--o)}.navcta{background:var(--o);color:#111820;padding:10px 15px;border-radius:7px}.hamb{display:none;background:none;color:white;border:1px solid #56616a;padding:8px;border-radius:6px;font-size:20px}
+.hero{min-height:650px;display:flex;align-items:center;background:linear-gradient(90deg,rgba(6,10,14,.9),rgba(6,10,14,.48),rgba(6,10,14,.18)),url("assets/realizace-hlavni.jpg") center/cover}.heroText{max-width:690px;color:#fff;padding:85px 22px}.ey{color:var(--o);font-weight:900;letter-spacing:1.8px;font-size:13px}.hero h1{font-size:clamp(46px,6vw,78px);line-height:.98;margin:12px 0 18px}.hero h1 span{color:var(--o)}.hero p{font-size:18px;max-width:620px}.buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:27px}.btn{padding:13px 18px;border-radius:7px;font-weight:850;display:inline-block}.primary{background:var(--o);color:#111820}.secondary{border:1px solid white;color:#fff}
+.band{background:var(--d);color:#fff}.bandgrid{display:grid;grid-template-columns:repeat(4,1fr)}.banditem{padding:20px;border-right:1px solid #34414b}.banditem b{display:block;color:var(--o)}.banditem small{color:#bcc5cb}
+section{padding:78px 0}.head{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:32px}.head h2{font-size:42px;line-height:1.05;margin:8px 0}.head p{max-width:570px;color:var(--m)}.orange{color:var(--o)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{border:1px solid var(--b);border-radius:12px;overflow:hidden;box-shadow:0 12px 35px rgba(17,24,32,.09)}.card img{width:100%;height:185px;object-fit:cover}.cardbody{padding:19px}.ico{width:40px;height:40px;border-radius:50%;background:#fff0dd;color:#e77b00;display:grid;place-items:center;font-weight:900}.card h3{margin:11px 0 6px}.card p{color:var(--m);font-size:14px;margin-bottom:0}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.gallery figure{margin:0;aspect-ratio:1.35;overflow:hidden;border-radius:10px;position:relative;cursor:pointer}.gallery img{width:100%;height:100%;object-fit:cover;transition:.3s}.gallery figure:hover img{transform:scale(1.05)}.cap{position:absolute;bottom:0;left:0;right:0;color:#fff;padding:12px;font-weight:800;background:linear-gradient(transparent,rgba(0,0,0,.8))}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.split img{width:100%;border-radius:12px;box-shadow:0 15px 45px rgba(0,0,0,.13)}.checks{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:25px}.check{border-top:2px solid var(--o);padding-top:9px}.check span{display:block;color:var(--m);font-size:12px}
+.dark{background:var(--d);color:#fff}.refs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.ref{background:var(--d2);border:1px solid #35424c;border-radius:12px;padding:22px}.stars{color:var(--o)}.ref p{color:#d9dfe3}
+.contact{display:grid;grid-template-columns:.9fr 1.1fr;gap:30px}.contactbox{border:1px solid var(--b);padding:17px;border-radius:9px;margin-bottom:12px}.contactbox b{display:block}.form{border:1px solid var(--b);border-radius:12px;padding:24px;box-shadow:0 12px 35px rgba(17,24,32,.08)}label{font-size:13px;font-weight:800}input,select,textarea{width:100%;padding:12px;border:1px solid #ccd4da;border-radius:7px;margin:6px 0 14px;font:inherit}textarea{min-height:130px}
+footer{background:#0b1116;color:#fff;padding:30px 0}.foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.foot strong{color:var(--o)}
+.modal{display:none;position:fixed;inset:0;background:#000c;z-index:100;align-items:center;justify-content:center;padding:20px}.modal.open{display:flex}.modal img{max-width:94vw;max-height:90vh}.close{position:absolute;right:20px;top:10px;color:#fff;background:none;border:0;font-size:40px}
+@media(max-width:850px){nav{display:none}.hamb{display:block}nav.open{display:flex;position:absolute;top:66px;left:14px;right:14px;background:var(--d);padding:18px;flex-direction:column;align-items:stretch}.bandgrid{grid-template-columns:1fr 1fr}.grid,.refs{grid-template-columns:1fr 1fr}.split,.contact{grid-template-columns:1fr}}
+@media(max-width:560px){section{padding:58px 0}.container{padding:0 16px}.hero{min-height:590px}.heroText{padding:70px 16px}.hero h1{font-size:48px}.head{display:block}.head h2{font-size:35px}.grid,.refs,.gallery{grid-template-columns:1fr}.checks{grid-template-columns:1fr}.banditem{padding:15px}.nav{height:64px}}
+</style>
+</head>
+<body>
+<header><div class="container nav"><a class="brandline" href="#home"><div class="mark">⌂</div><div class="brand">SOMSI<span>STAVEBNÍ PRÁCE</span></div></a><button class="hamb" onclick="document.querySelector('nav').classList.toggle('open')">☰</button><nav>
+<a href="#home">Úvod</a><a href="#sluzby">Služby</a><a href="#realizace">Realizace</a><a href="#onas">O nás</a><a href="#kontakt">Kontakt</a><a class="navcta" href="#kontakt">Nezávazná poptávka →</a>
+</nav></div></header>
+<main>
+<section id="home" class="hero"><div class="container heroText"><div class="ey">SOMSI STAVEBNÍ PRÁCE</div><h1>Od základu<br><span>po střechu.</span></h1><p>Dlouholeté zkušenosti ve stavebnictví a rekonstrukcích. Individuální přístup, kvalitní provedení, spolehlivost a férové ceny.</p><div class="buttons"><a class="btn primary" href="#kontakt">Nezávazná poptávka →</a><a class="btn secondary" href="#realizace">Prohlédnout realizace</a></div></div></section>
+<div class="band"><div class="container bandgrid"><div class="banditem"><b>Od roku 2002</b><small>Dlouholeté zkušenosti</small></div><div class="banditem"><b>Férové ceny</b><small>Jasná domluva a kalkulace</small></div><div class="banditem"><b>Individuální přístup</b><small>Podle potřeb zákazníka</small></div><div class="banditem"><b>3 kraje</b><small>Pardubický • Královéhradecký • Vysočina</small></div></div></div>
+<section id="sluzby"><div class="container"><div class="head"><div><div class="ey">CO DĚLÁME</div><h2>Kompletní stavební práce<br><span class="orange">na jednom místě.</span></h2></div><p>Od hrubé stavby až po dokončovací práce, instalace a stavby na klíč. Nabízíme také poradenství, konzultace a cenové kalkulace.</p></div>
+<div class="grid">
+<div class="card"><img src="assets/realizace-1.jpg" alt=""><div class="cardbody"><div class="ico">⌂</div><h3>Hrubé stavby</h3><p>Základy, konstrukce a komplexní zednické práce.</p></div></div>
+<div class="card"><img src="assets/realizace-4.jpg" alt=""><div class="cardbody"><div class="ico">↻</div><h3>Rekonstrukce</h3><p>Kompletní rekonstrukce domů, bytů a objektů.</p></div></div>
+<div class="card"><img src="assets/realizace-2.jpg" alt=""><div class="cardbody"><div class="ico">▤</div><h3>Omítky a fasády</h3><p>Vnitřní omítky, fasády a dokončovací práce.</p></div></div>
+<div class="card"><img src="assets/realizace-3.jpg" alt=""><div class="cardbody"><div class="ico">▦</div><h3>Obklady, dlažby a podlahy</h3><p>Přesné provedení povrchů podle vašich představ.</p></div></div>
+<div class="card"><img src="assets/realizace-hlavni.jpg" alt=""><div class="cardbody"><div class="ico">⚙</div><h3>Voda, odpady a elektro</h3><p>Vodoinstalace, odpady a elektroinstalace.</p></div></div>
+<div class="card"><img src="assets/realizace-5.jpg" alt=""><div class="cardbody"><div class="ico">✓</div><h3>Stavby na klíč</h3><p>Terénní úpravy, montáž oken, poradenství a kompletní realizace.</p></div></div>
+</div></div></section>
+
+<section id="realizace" style="background:var(--l)"><div class="container"><div class="head"><div><div class="ey">REALIZACE</div><h2>Naše práce<br><span class="orange">mluví za nás.</span></h2></div><p>Výběr fotografií z realizací stavebních prací, které firma v minulosti prováděla.</p></div>
+<div class="gallery">
+<figure onclick="zoom(this)"><img src="assets/realizace-1.jpg" alt="Realizace"><div class="cap">Stavební realizace</div></figure>
+<figure onclick="zoom(this)"><img src="assets/realizace-2.jpg" alt="Rekonstrukce"><div class="cap">Rekonstrukce</div></figure>
+<figure onclick="zoom(this)"><img src="assets/realizace-3.jpg" alt="Základová deska"><div class="cap">Základy a příprava</div></figure>
+<figure onclick="zoom(this)"><img src="assets/realizace-4.jpg" alt="Rekonstrukce domu"><div class="cap">Rekonstrukce domu</div></figure>
+<figure onclick="zoom(this)"><img src="assets/realizace-5.jpg" alt="Stavba"><div class="cap">Stavební práce</div></figure>
+<figure onclick="zoom(this)"><img src="assets/realizace-6.jpg" alt="Objekt"><div class="cap">Komplexní realizace</div></figure>
+</div></div></section>
+
+<section id="onas"><div class="container split"><div><div class="ey">O SOMSI</div><h2>Stavíme na zkušenostech<br><span class="orange">od roku 2002.</span></h2><p>Máme dlouholeté zkušenosti v oblasti stavebnictví a rekonstrukcí. Každou zakázku řešíme individuálně podle potřeb zákazníka a dbáme na kvalitu, spolehlivost a férové ceny.</p><p>Pomůžeme s poradenstvím, konzultací i cenovou kalkulací a podle rozsahu zajistíme kompletní stavbu na klíč.</p><div class="checks"><div class="check"><b>Kvalita</b><span>Důraz na poctivé provedení</span></div><div class="check"><b>Spolehlivost</b><span>Dodržování dohod</span></div><div class="check"><b>Férové ceny</b><span>Transparentní kalkulace</span></div><div class="check"><b>Individuální přístup</b><span>Řešení podle vašich potřeb</span></div></div></div><img src="assets/realizace-hlavni.jpg" alt="Realizace SOMSI"></div></section>
+
+<section class="dark"><div class="container"><div class="head"><div><div class="ey">KDE PŮSOBÍME</div><h2>Pardubický kraj<br>Královéhradecký kraj<br><span class="orange">a Vysočina.</span></h2></div><p style="color:#c7cfd5">Zakázky realizujeme v uvedených regionech. Pro konkrétní lokalitu nás neváhejte kontaktovat.</p></div></div></section>
+
+<section id="kontakt"><div class="container"><div class="head"><div><div class="ey">KONTAKT</div><h2>Plánujete stavbu<br><span class="orange">nebo rekonstrukci?</span></h2></div><p>Ozvěte se nám a rádi s vámi probereme vaše představy. Připravíme konzultaci a cenovou kalkulaci.</p></div>
+<div class="contact"><div>
+<div class="contactbox"><b>Adresa</b>Horní Studenec 29</div>
+<div class="contactbox"><b>Telefon</b><a href="tel:+420736771754">+420 736 771 754</a><br><a href="tel:+420722572154">+420 722 572 154</a></div>
+<div class="contactbox"><b>E-mail</b><a href="mailto:petrsomsi@seznam.cz">petrsomsi@seznam.cz</a><br><a href="mailto:zdendableha@seznam.cz">zdendableha@seznam.cz</a></div>
+<div class="contactbox"><b>IČO</b>86872109</div>
+<div class="contactbox"><b>Web</b><a href="https://stavbysomsi.cz" target="_blank" rel="noopener">www.stavbysomsi.cz</a></div>
+</div>
+<form class="form" onsubmit="sendForm(event)"><h3>Nezávazná poptávka</h3><label>Jméno<input id="fn" required></label><label>Telefon<input id="fp" required></label><label>E-mail<input id="fe" type="email" required></label><label>Co potřebujete?<select id="fs"><option>Hrubá stavba</option><option>Rekonstrukce</option><option>Omítky / fasády</option><option>Obklady / dlažby / podlahy</option><option>Voda / odpady / elektro</option><option>Stavba na klíč</option><option>Jiné</option></select></label><label>Popis zakázky<textarea id="fm" required></textarea></label><button class="btn primary" type="submit">Odeslat poptávku →</button></form></div></div></section>
+</main>
+<footer><div class="container foot"><div><strong>SOMSI STAVEBNÍ PRÁCE</strong><br>Od základu po střechu.</div><div>IČO 86872109<br>Horní Studenec 29</div><div>© <span id="y"></span> SOMSI</div></div></footer>
+<div class="modal" id="modal" onclick="this.classList.remove('open')"><button class="close">×</button><img id="mi" alt=""></div>
+<script>
+document.getElementById('y').textContent=new Date().getFullYear();
+function zoom(x){document.getElementById('mi').src=x.querySelector('img').src;document.getElementById('modal').classList.add('open')}
+function sendForm(e){e.preventDefault();const n=fn.value,p=fp.value,em=fe.value,s=fs.value,m=fm.value;const body=encodeURIComponent(`Jméno: ${n}\nTelefon: ${p}\nE-mail: ${em}\nSlužba: ${s}\n\n${m}`);location.href=`mailto:petrsomsi@seznam.cz?subject=${encodeURIComponent('Nezávazná poptávka – SOMSI')}&body=${body}`}
+</script>
+</body></html>
