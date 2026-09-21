@@ -13,11 +13,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Rebuild reference home image
-        run: |
-          mkdir -p android/app/src/main/res/drawable
-          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable/somsi_ref.webp
-          file android/app/src/main/res/drawable/somsi_ref.webp
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
