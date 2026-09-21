@@ -1,5 +1,5 @@
 plugins { id 'com.android.application' }
 
 android { namespace 'cz.somsi.app'; compileSdk 35
-    defaultConfig { applicationId 'cz.somsi.app.somsi'; minSdk 26; targetSdk 35; versionCode 6; versionName '6.0.0' }
+    defaultConfig { applicationId 'cz.somsi.app.somsi'; minSdk 26; targetSdk 35; versionCode 7; versionName '7.0.0' }
 }
