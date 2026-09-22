@@ -17,15 +17,8 @@ jobs:
         run: |
           set -e
           mkdir -p android/app/src/main/res/drawable-nodpi
-          python3 - <<'PY'
-          import base64, glob
-          raw = ''.join(open(p, 'r', encoding='ascii').read() for p in sorted(glob.glob('android/refchunks/*.b64')))
-          raw = ''.join(raw.split())
-          raw += '=' * ((4 - len(raw) % 4) % 4)
-          data = base64.b64decode(raw, validate=True)
-          open('android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp','wb').write(data)
-          print('reference bytes:', len(data))
-          PY
+          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp || true
+          test -s android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
           file android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
       - name: Set up Java
         uses: actions/setup-java@v4
