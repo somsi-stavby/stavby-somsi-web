@@ -13,6 +13,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Restore exact reference home image
+        run: |
+          set -e
+          mkdir -p android/app/src/main/res/drawable-nodpi
+          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
+          file android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -27,6 +33,6 @@ jobs:
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: somsi-apk-installable
+          name: somsi-apk-installable-v8
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
