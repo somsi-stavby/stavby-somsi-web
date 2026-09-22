@@ -7,5 +7,9 @@
         <item name="android:statusBarColor">#050A0E</item>
         <item name="android:navigationBarColor">#050A0E</item>
         <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowDisablePreview">false</item>
+        <item name="android:windowBackground">#050A0E</item>
     </style>
 </resources>
