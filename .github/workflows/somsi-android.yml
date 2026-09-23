@@ -17,7 +17,7 @@ jobs:
         run: |
           set -e
           mkdir -p android/app/src/main/res/drawable-nodpi
-          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
+          cat android/refchunks/*.b64 | tr -d '\\n\\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
           test -s android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
           file android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
       - name: Set up Java
@@ -31,9 +31,16 @@ jobs:
           gradle-version: '8.10.2'
       - name: Build debug APK
         run: gradle -p android assembleDebug --no-daemon
+      - name: Validate APK archive
+        run: |
+          set -e
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          unzip -t "$APK"
+          sha256sum "$APK"
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: somsi-apk-installable-v9
+          name: somsi-apk-installable-v9-fixed
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
