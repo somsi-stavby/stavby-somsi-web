@@ -1,0 +1,19 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'cz.somsi.app.v7'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'cz.somsi.app.v7'
+        minSdk 23
+        targetSdk 35
+        versionCode 7
+        versionName '7.0.0'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+}
