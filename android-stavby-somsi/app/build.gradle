@@ -1,0 +1,13 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'cz.somsi.stavby'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'cz.somsi.stavby'
+        minSdk 24
+        targetSdk 36
+        versionCode 100
+        versionName '1.0.0'
+    }
+}
