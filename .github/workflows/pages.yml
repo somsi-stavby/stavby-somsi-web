@@ -14,29 +14,53 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Install photo enhancement tools
         run: python -m pip install --disable-pip-version-check pillow
-
       - name: Enhance website photos
         run: python .github/enhance-images.py
-
       - name: Upload website
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
-
       - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Set up Java for Android build
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Restore SOMSI reference image
+        run: |
+          set -e
+          mkdir -p android/app/src/main/res/drawable-nodpi
+          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
+          test -s android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
+      - name: Build SOMSI Android APK
+        run: gradle -p android assembleDebug --no-daemon
+      - name: Validate SOMSI APK
+        run: |
+          set -e
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          unzip -t "$APK"
+          sha256sum "$APK"
+      - name: Publish SOMSI APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: STAVBY-SOMSI-APK-latest
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
