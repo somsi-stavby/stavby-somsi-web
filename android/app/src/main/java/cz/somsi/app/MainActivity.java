@@ -146,3 +146,5 @@ public class MainActivity extends Activity {
 
     private void newRecord() { final String[] items={"Nová zakázka","Nová fotografie","Nový záznam deníku","Nový úkol","Nový materiál","Nový dokument"}; new AlertDialog.Builder(this).setTitle("Nový záznam").setItems(items,(d,which)->{ if(which==1) openCamera(); else Toast.makeText(this,items[which]+" – připraveno",Toast.LENGTH_SHORT).show(); }).setNegativeButton("Zrušit",null).show(); }
 }
+
+// Final verification trigger: application source unchanged.
