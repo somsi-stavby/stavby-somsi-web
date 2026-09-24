@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
         root = new FrameLayout(this);
         root.setBackgroundColor(BG);
         ImageView reference = new ImageView(this);
-        reference.setImageResource(R.drawable.somsi_home_reference);
+        reference.setImageResource(R.drawable.realizace_hlavni);
         reference.setScaleType(ImageView.ScaleType.FIT_XY);
         root.addView(reference, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
