@@ -38,9 +38,29 @@ jobs:
           test -s "$APK"
           unzip -t "$APK"
           sha256sum "$APK"
+      - name: Android runtime smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: |
+            set -e
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            adb logcat -c
+            adb shell am start -n cz.somsi.stavby/cz.somsi.app.MainActivity
+            sleep 8
+            PID=$(adb shell pidof cz.somsi.stavby | tr -d '\\r')
+            test -n "$PID"
+            adb logcat -d > /tmp/somsi-logcat.txt
+            if grep -q "FATAL EXCEPTION" /tmp/somsi-logcat.txt; then
+              cat /tmp/somsi-logcat.txt
+              exit 1
+            fi
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: somsi-apk-installable-v9-fixed
+          name: somsi-apk-installable-v11
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
