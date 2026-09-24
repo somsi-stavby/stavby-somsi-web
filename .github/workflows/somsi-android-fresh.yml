@@ -1,0 +1,38 @@
+name: SOMSI fresh Android build
+
+on:
+  push:
+    branches: [somsi-android-fresh-2026]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Build fresh APK
+        run: gradle -p somsi-android-fresh :app:assembleDebug --no-daemon
+      - name: Validate APK
+        run: |
+          set -e
+          APK=somsi-android-fresh/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          unzip -t "$APK"
+          sha256sum "$APK"
+          $ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer manifest target-sdk "$APK"
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: STAVBY-SOMSI-1.0.0-ANDROID16
+          path: somsi-android-fresh/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
