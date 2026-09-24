@@ -3,6 +3,7 @@ name: SOMSI Android APK
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - 'android/**'
       - '.github/workflows/somsi-android.yml'
@@ -14,38 +15,37 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restore exact reference home image
+
+      - name: Restore reference image
         run: |
           set -e
           mkdir -p android/app/src/main/res/drawable-nodpi
           cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
           test -s android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
-          file android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Build debug APK
+
+      - name: Build APK
         run: gradle -p android assembleDebug --no-daemon
-      - name: Validate APK archive
+
+      - name: Validate APK
         run: |
           set -e
           APK=android/app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK"
           unzip -t "$APK"
           sha256sum "$APK"
-      - name: Publish installable APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: somsi-apk-installable-latest
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-      - name: Android runtime smoke test
+
+      - name: Install APK on emulator and verify launch
         uses: reactivecircus/android-emulator-runner@v2
         timeout-minutes: 15
         with:
@@ -55,37 +55,33 @@ jobs:
           disable-animations: true
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
-            set -uo pipefail
+            set -euo pipefail
             APK=android/app/build/outputs/apk/debug/app-debug.apk
             adb install -r "$APK"
             adb logcat -c
-            adb shell am force-stop cz.somsi.stavby || true
-            START_OUTPUT=$(adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity 2>&1 || true)
-            echo '--- AM START ---'
-            echo "$START_OUTPUT"
-            sleep 8
-            adb shell dumpsys activity activities > /tmp/somsi-activity.txt || true
-            adb shell dumpsys package cz.somsi.stavby > /tmp/somsi-package.txt || true
-            adb logcat -d > /tmp/somsi-logcat.txt || true
-            echo '--- ACTIVITY STATE ---'
-            grep -E 'mResumedActivity|mFocusedApp|cz\.somsi\.stavby|cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt || true
-            echo '--- CRASH CHECK ---'
-            grep -E 'FATAL EXCEPTION|AndroidRuntime.*FATAL|Process: cz\.somsi\.stavby|Unable to start activity' /tmp/somsi-logcat.txt || true
-            echo '--- APP PACKAGE ---'
-            grep -E 'versionName|versionCode|cz\.somsi\.app\.MainActivity' /tmp/somsi-package.txt || true
-            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi-logcat.txt; then
-              echo 'SOMSI crashed during runtime test.'
-              cat /tmp/somsi-logcat.txt
+            START=$(adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity 2>&1)
+            printf '%s\n' "$START"
+            sleep 5
+            adb shell dumpsys activity activities > /tmp/activity.txt
+            adb logcat -d > /tmp/logcat.txt
+            if ! printf '%s\n' "$START" | grep -q 'Status: ok'; then
+              cat /tmp/logcat.txt
               exit 1
             fi
-            if ! echo "$START_OUTPUT" | grep -q 'Status: ok'; then
-              echo 'Android did not report a successful Activity start.'
-              cat /tmp/somsi-logcat.txt
+            if grep -qE 'FATAL EXCEPTION|Unable to start activity|Process: cz\.somsi\.stavby' /tmp/logcat.txt; then
+              cat /tmp/logcat.txt
               exit 1
             fi
-            if ! grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt; then
-              echo 'SOMSI MainActivity is not present in the active Android task.'
-              cat /tmp/somsi-logcat.txt
+            if ! grep -q 'cz\.somsi\.app\.MainActivity' /tmp/activity.txt; then
+              cat /tmp/activity.txt
+              cat /tmp/logcat.txt
               exit 1
             fi
-            echo 'SOMSI runtime smoke test passed.'
+            echo 'SOMSI Android launch test PASSED.'
+
+      - name: Publish verified APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: STAVBY-SOMSI-APK-verified
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
