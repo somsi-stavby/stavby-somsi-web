@@ -33,9 +33,10 @@ jobs:
       - name: Validate APK
         run: |
           set -e
-          test -s "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
-          unzip -t "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
-          sha256sum "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
+          APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          unzip -t "$APK"
+          sha256sum "$APK"
 
       - name: Install APK on emulator and verify launch
         uses: reactivecircus/android-emulator-runner@v2
@@ -47,16 +48,14 @@ jobs:
           disable-animations: true
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
-            set -e
+            bash -euo pipefail <<'BASH'
             APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
             adb start-server >/dev/null 2>&1 || true
-            for i in $(seq 1 60); do
+            for i in $(seq 1 90); do
               STATE="$(adb get-state 2>/dev/null || true)"
               BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-              if [ "$STATE" = "device" ] && [ "$BOOT" = "1" ]; then
-                break
-              fi
-              if [ "$i" = "60" ]; then
+              if [[ "$STATE" == "device" && "$BOOT" == "1" ]]; then break; fi
+              if (( i == 90 )); then
                 echo "ADB did not become ready: state=$STATE boot=$BOOT"
                 adb devices -l || true
                 exit 1
@@ -71,14 +70,15 @@ jobs:
             sleep 5
             adb shell dumpsys activity activities > /tmp/somsi_activity.txt
             adb logcat -d > /tmp/somsi_logcat.txt
-            grep -q 'Status: ok' /tmp/somsi_start.txt || { echo 'MainActivity did not report Status: ok'; exit 1; }
-            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt || { echo 'MainActivity is not active'; cat /tmp/somsi_activity.txt; exit 1; }
+            grep -q 'Status: ok' /tmp/somsi_start.txt
+            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt
             if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt; then
               echo 'Android runtime crash detected'
               cat /tmp/somsi_logcat.txt
               exit 1
             fi
             echo 'SOMSI Android launch test PASSED.'
+            BASH
 
       - name: Publish verified APK
         uses: actions/upload-artifact@v4
