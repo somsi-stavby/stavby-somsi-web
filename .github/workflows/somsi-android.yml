@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,6 +39,12 @@ jobs:
           test -s "$APK"
           unzip -t "$APK"
           sha256sum "$APK"
+      - name: Publish installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: somsi-apk-installable-v11
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
       - name: Android runtime smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -58,9 +65,3 @@ jobs:
               cat /tmp/somsi-logcat.txt
               exit 1
             fi
-      - name: Upload installable APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: somsi-apk-installable-v11
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
