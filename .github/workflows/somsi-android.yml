@@ -33,10 +33,9 @@ jobs:
       - name: Validate APK
         run: |
           set -e
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
-          test -s "$APK"
-          unzip -t "$APK"
-          sha256sum "$APK"
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          unzip -t android/app/build/outputs/apk/debug/app-debug.apk
+          sha256sum android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Install APK on emulator and verify launch
         uses: reactivecircus/android-emulator-runner@v2
@@ -49,27 +48,19 @@ jobs:
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
             set -e
-            APK=android/app/build/outputs/apk/debug/app-debug.apk
-            adb install -r "$APK"
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
-            START=$(adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity 2>&1)
-            printf '%s\n' "$START"
+            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity > /tmp/somsi_start.txt 2>&1
+            cat /tmp/somsi_start.txt
             sleep 5
-            adb shell dumpsys activity activities > /tmp/activity.txt
-            adb logcat -d > /tmp/logcat.txt
-            if ! printf '%s\n' "$START" | grep -q 'Status: ok'; then
-              cat /tmp/logcat.txt
+            adb shell dumpsys activity activities > /tmp/somsi_activity.txt
+            adb logcat -d > /tmp/somsi_logcat.txt
+            grep -q 'Status: ok' /tmp/somsi_start.txt
+            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt; then
+              cat /tmp/somsi_logcat.txt
               exit 1
             fi
-            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/logcat.txt; then
-              cat /tmp/logcat.txt
-              exit 1
-            fi
-            if ! grep -q 'cz\.somsi\.app\.MainActivity' /tmp/activity.txt; then
-              cat /tmp/activity.txt
-              cat /tmp/logcat.txt
-              exit 1
-            fi
+            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt
             echo 'SOMSI Android launch test PASSED.'
 
       - name: Publish verified APK
