@@ -45,32 +45,21 @@ jobs:
           api-level: 35
           arch: x86_64
           profile: pixel_2
+          emulator-boot-timeout: 600
           disable-animations: true
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
-            bash -euo pipefail <<'BASH'
+            set -e
             APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
-            adb start-server >/dev/null 2>&1 || true
-            for i in $(seq 1 90); do
-              STATE="$(adb get-state 2>/dev/null || true)"
-              BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-              if [[ "$STATE" == "device" && "$BOOT" == "1" ]]; then break; fi
-              if (( i == 90 )); then
-                echo "ADB did not become ready: state=$STATE boot=$BOOT"
-                adb devices -l || true
-                exit 1
-              fi
-              sleep 2
-            done
             adb wait-for-device
+            adb shell getprop sys.boot_completed
             adb install -r "$APK"
             adb logcat -c
-            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity > /tmp/somsi_start.txt 2>&1
-            cat /tmp/somsi_start.txt
-            sleep 5
+            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity | tee /tmp/somsi_start.txt
+            grep -q 'Status: ok' /tmp/somsi_start.txt
+            sleep 3
             adb shell dumpsys activity activities > /tmp/somsi_activity.txt
             adb logcat -d > /tmp/somsi_logcat.txt
-            grep -q 'Status: ok' /tmp/somsi_start.txt
             grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt
             if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt; then
               echo 'Android runtime crash detected'
@@ -78,7 +67,6 @@ jobs:
               exit 1
             fi
             echo 'SOMSI Android launch test PASSED.'
-            BASH
 
       - name: Publish verified APK
         uses: actions/upload-artifact@v4
