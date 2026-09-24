@@ -49,12 +49,16 @@ jobs:
           disable-animations: false
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
+            adb wait-for-device
             adb install -r "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
             adb logcat -c
-            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity | grep -q 'Status: ok'
+            adb shell am start -W -n cz.somsi.app/cz.somsi.app.MainActivity > /tmp/somsi_start.txt
+            grep -q 'Status: ok' /tmp/somsi_start.txt
             sleep 3
-            adb shell dumpsys activity activities | grep -q 'cz\.somsi\.app\.MainActivity'
-            ! adb logcat -d | grep -qE 'FATAL EXCEPTION|Unable to start activity'
+            adb shell dumpsys activity activities > /tmp/somsi_activity.txt
+            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt
+            adb logcat -d > /tmp/somsi_logcat.txt
+            ! grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt
             echo 'SOMSI Android launch test PASSED.'
 
       - name: Publish verified APK
