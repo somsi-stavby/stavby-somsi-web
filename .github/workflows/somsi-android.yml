@@ -41,7 +41,7 @@ jobs:
           grep -q "package: name='cz.somsi.app'" /tmp/somsi-badging.txt
           grep -q "launchable-activity: name='cz.somsi.app.MainActivity'" /tmp/somsi-badging.txt
           unzip -l "$APK" | grep -q 'classes.dex'
-          unzip -l "$APK" | grep -q 'res/drawable/realizace_hlavni'
+          unzip -l "$APK" | grep -q 'res/drawable/realizace_hlavni.jpg'
           sha256sum "$APK"
           echo 'SOMSI Android APK structural verification PASSED.'
 
