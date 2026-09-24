@@ -60,19 +60,26 @@ jobs:
             adb install -r "$APK"
             adb logcat -c
             adb shell am force-stop cz.somsi.stavby || true
-            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity || true
+            START_OUTPUT=$(adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity 2>&1 || true)
+            echo "$START_OUTPUT"
             sleep 5
             adb shell dumpsys activity activities > /tmp/somsi-activity.txt || true
             adb logcat -d > /tmp/somsi-logcat.txt || true
-            cat /tmp/somsi-activity.txt
-            cat /tmp/somsi-logcat.txt
-            PID=$(adb shell pidof cz.somsi.stavby | tr -d '\r' | xargs || true)
-            if [ -z "$PID" ]; then
-              echo 'SOMSI process is not running after launcher start.'
-              exit 1
-            fi
+            echo '--- ACTIVITY STATE ---'
+            grep -E 'mResumedActivity|cz\.somsi\.stavby|cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt || true
+            echo '--- CRASH CHECK ---'
+            grep -E 'FATAL EXCEPTION|AndroidRuntime.*FATAL|Process: cz\.somsi\.stavby' /tmp/somsi-logcat.txt || true
             if grep -q 'FATAL EXCEPTION' /tmp/somsi-logcat.txt; then
               echo 'SOMSI crashed during runtime test.'
+              cat /tmp/somsi-logcat.txt
               exit 1
             fi
-            echo "SOMSI runtime smoke test passed. PID=$PID"
+            if ! echo "$START_OUTPUT" | grep -q 'Status: ok'; then
+              echo 'Android did not report a successful Activity start.'
+              exit 1
+            fi
+            if ! grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt; then
+              echo 'SOMSI MainActivity is not present in the active Android task.'
+              exit 1
+            fi
+            echo 'SOMSI runtime smoke test passed.'
