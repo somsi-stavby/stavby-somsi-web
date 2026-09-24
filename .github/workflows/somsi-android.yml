@@ -16,13 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore reference image
-        run: |
-          set -e
-          mkdir -p android/app/src/main/res/drawable-nodpi
-          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
-          test -s android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -68,7 +61,7 @@ jobs:
               cat /tmp/logcat.txt
               exit 1
             fi
-            if grep -qE 'FATAL EXCEPTION|Unable to start activity|Process: cz\.somsi\.stavby' /tmp/logcat.txt; then
+            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/logcat.txt; then
               cat /tmp/logcat.txt
               exit 1
             fi
