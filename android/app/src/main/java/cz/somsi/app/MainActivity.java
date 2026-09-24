@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,17 +20,17 @@ import android.widget.*;
 public class MainActivity extends Activity {
     private static final String WEB = "https://stavbysomsi.cz/";
     private static final String PHONE = "+420736771754";
-    private static final int BG = Color.rgb(4, 10, 14);
+    private static final int BG = Color.rgb(7, 12, 16);
     private static final int GOLD = Color.rgb(245, 178, 43);
-    private static final int PANEL = Color.rgb(16, 25, 31);
-    private FrameLayout root;
-    private float sx = 1f, sy = 1f;
+    private static final int PANEL = Color.rgb(20, 29, 35);
+    private static final int PANEL_2 = Color.rgb(27, 38, 45);
+    private LinearLayout content;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         try { requestWindowFeature(Window.FEATURE_NO_TITLE); } catch (Throwable ignored) {}
         configureWindow();
-        showHomeSafely();
+        showHome();
     }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {
@@ -51,100 +52,178 @@ public class MainActivity extends Activity {
                     c.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
                 }
             } else {
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+                getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             }
         } catch (Throwable ignored) {}
     }
 
-    private void showHomeSafely() {
-        try { showHome(); } catch (Throwable t) { showFallbackHome(); }
-    }
-
     private void showHome() {
-        root = new FrameLayout(this);
-        root.setBackgroundColor(BG);
-        ImageView reference = new ImageView(this);
-        reference.setImageResource(R.drawable.realizace_hlavni);
-        reference.setScaleType(ImageView.ScaleType.FIT_XY);
-        root.addView(reference, new FrameLayout.LayoutParams(-1, -1));
-        setContentView(root);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(18), dp(18), dp(18), dp(28));
+        content.setBackgroundColor(BG);
+        scroll.addView(content);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        TextView logo = label("SOMSI", 30, GOLD, true);
+        header.addView(logo, new LinearLayout.LayoutParams(0, dp(54), 1));
+        Button menu = smallButton("☰");
+        menu.setOnClickListener(v -> showMenu());
+        header.addView(menu, new LinearLayout.LayoutParams(dp(54), dp(54)));
+        content.addView(header);
+
+        TextView subtitle = label("STAVEBNÍ PRÁCE", 13, Color.LTGRAY, true);
+        subtitle.setLetterSpacing(.18f);
+        content.addView(subtitle, margin(0, 0, 0, 12));
+
+        LinearLayout hero = panel();
+        hero.setPadding(dp(14), dp(14), dp(14), dp(14));
+        TextView h1 = label("Od základu po střechu", 24, Color.WHITE, true);
+        hero.addView(h1);
+        TextView h2 = label("Zakázky, fotodokumentace a stavební agenda na jednom místě.", 14, Color.LTGRAY, false);
+        hero.addView(h2, margin(0, 6, 0, 12));
+        Button web = actionButton("WEB SOMSI", GOLD);
+        web.setOnClickListener(v -> openWeb());
+        hero.addView(web, new LinearLayout.LayoutParams(-1, dp(50)));
+        content.addView(hero, margin(0, 0, 0, 14));
+
+        TextView section = label("RYCHLÝ PŘÍSTUP", 13, GOLD, true);
+        section.setLetterSpacing(.12f);
+        content.addView(section, margin(2, 0, 0, 8));
+
+        addGridRow("Zakázky", "86 aktivních", "📋", () -> openSection("Zakázky"),
+                   "Fotodokumentace", "Nová fotografie", "📷", this::openCamera);
+        addGridRow("Stavební deník", "Záznamy stavby", "📒", () -> openSection("Stavební deník"),
+                   "Úkoly", "Denní úkoly", "✓", () -> openSection("Úkoly"));
+        addGridRow("Docházka", "Příchod / odchod", "⏱", () -> openSection("Docházka"),
+                   "Materiál", "Sklad a materiál", "▣", () -> openSection("Materiál"));
+        addGridRow("Dokumenty", "Smlouvy a rozpočty", "▤", () -> openSection("Dokumenty"),
+                   "Adresář", "Kontakty", "👤", () -> openSection("Adresář"));
+
+        LinearLayout bottom = panel();
+        bottom.setPadding(dp(12), dp(12), dp(12), dp(12));
+        Button chat = actionButton("💬  Otevřít chat", Color.WHITE);
+        chat.setOnClickListener(v -> showChat());
+        bottom.addView(chat, new LinearLayout.LayoutParams(-1, dp(52)));
+        Button call = actionButton("📞  Zavolat SOMSI", GOLD);
+        call.setOnClickListener(v -> callPhone());
+        bottom.addView(call, margin(0, 8, 0, 0));
+        content.addView(bottom, margin(0, 14, 0, 0));
+
+        TextView foot = label("SOMSI stavební práce  •  +420 736 771 754", 12, Color.GRAY, false);
+        foot.setGravity(Gravity.CENTER);
+        content.addView(foot, margin(0, 16, 0, 0));
+
+        setContentView(scroll);
         configureWindow();
-        root.post(() -> {
-            sx = root.getWidth() / 759f;
-            sy = root.getHeight() / 1511f;
-            addHomeHotspots();
-        });
     }
 
-    private void showFallbackHome() {
-        LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setGravity(Gravity.CENTER_HORIZONTAL);
-        page.setBackgroundColor(BG);
-        page.setPadding(24, 40, 24, 24);
-        TextView logo = text("SOMSI", 38, GOLD, true);
-        page.addView(logo);
-        TextView sub = text("stavební práce\nOd základu po střechu", 22, Color.WHITE, true);
-        sub.setGravity(Gravity.CENTER);
-        page.addView(sub, new LinearLayout.LayoutParams(-1, 100));
-        page.addView(actionButton("📞  Zavolat", this::callPhone));
-        page.addView(actionButton("🌐  Web SOMSI", this::openWeb));
-        page.addView(actionButton("💬  Chat", this::showChat));
-        page.addView(actionButton("📷  Fotodokumentace", this::openCamera));
-        setContentView(page);
-        configureWindow();
+    private void addGridRow(String a, String aSub, String aIcon, Runnable aRun,
+                            String b, String bSub, String bIcon, Runnable bRun) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.addView(tile(a, aSub, aIcon, aRun), new LinearLayout.LayoutParams(0, dp(116), 1));
+        Space gap = new Space(this);
+        row.addView(gap, new LinearLayout.LayoutParams(dp(8), 1));
+        row.addView(tile(b, bSub, bIcon, bRun), new LinearLayout.LayoutParams(0, dp(116), 1));
+        content.addView(row, margin(0, 0, 0, 8));
     }
 
-    private Button actionButton(String label, final Runnable action) {
+    private LinearLayout tile(String title, String sub, String icon, Runnable action) {
+        LinearLayout box = panel();
+        box.setPadding(dp(12), dp(10), dp(10), dp(10));
+        box.setOnClickListener(v -> action.run());
+        TextView ic = label(icon, 23, GOLD, true);
+        box.addView(ic, new LinearLayout.LayoutParams(-1, dp(30)));
+        TextView t = label(title, 16, Color.WHITE, true);
+        box.addView(t);
+        TextView s = label(sub, 12, Color.LTGRAY, false);
+        box.addView(s, margin(0, 3, 0, 0));
+        return box;
+    }
+
+    private LinearLayout panel() {
+        LinearLayout p = new LinearLayout(this);
+        p.setOrientation(LinearLayout.VERTICAL);
+        p.setBackgroundColor(PANEL);
+        return p;
+    }
+
+    private Button actionButton(String text, int color) {
         Button b = new Button(this);
-        b.setText(label); b.setTextColor(Color.WHITE); b.setTextSize(18); b.setAllCaps(false); b.setBackgroundColor(PANEL);
-        b.setOnClickListener(v -> action.run());
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, 70); p.setMargins(0, 8, 0, 8); b.setLayoutParams(p);
+        b.setText(text);
+        b.setTextSize(15);
+        b.setTextColor(color == GOLD ? Color.BLACK : Color.WHITE);
+        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        b.setAllCaps(false);
+        b.setBackgroundColor(color == GOLD ? GOLD : PANEL_2);
         return b;
     }
 
-    private View hotspot(float x, float y, float w, float h, final Runnable action) {
-        View v = new View(this); v.setBackgroundColor(Color.TRANSPARENT); v.setOnClickListener(view -> action.run());
-        FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(Math.max(1, Math.round(w * sx)), Math.max(1, Math.round(h * sy)));
-        p.leftMargin = Math.round(x * sx); p.topMargin = Math.round(y * sy); root.addView(v, p); return v;
+    private Button smallButton(String text) {
+        Button b = actionButton(text, Color.WHITE);
+        b.setTextSize(22);
+        b.setPadding(0, 0, 0, 0);
+        return b;
     }
 
-    private void addHomeHotspots() {
-        hotspot(0, 55, 120, 125, this::showMenu); hotspot(650, 45, 105, 135, this::showNotifications);
-        hotspot(4, 716, 242, 112, () -> openSection("Zakázky")); hotspot(252, 716, 247, 112, this::openCamera); hotspot(505, 716, 250, 112, () -> openSection("Stavební deník"));
-        hotspot(4, 832, 242, 112, () -> openSection("Úkoly")); hotspot(252, 832, 247, 112, () -> openSection("Docházka")); hotspot(505, 832, 250, 112, () -> openSection("Materiál"));
-        hotspot(4, 944, 242, 112, () -> openSection("Dokumenty")); hotspot(252, 944, 247, 112, () -> openSection("Adresář")); hotspot(505, 944, 250, 112, this::showChat);
-        hotspot(4, 1068, 751, 115, this::callPhone); hotspot(0, 1358, 150, 153, this::showHomeSafely); hotspot(150, 1358, 150, 153, () -> openSection("Zakázky"));
-        hotspot(300, 1335, 160, 176, this::newRecord); hotspot(450, 1358, 150, 153, this::showChat); hotspot(600, 1358, 159, 153, this::showMenu);
+    private TextView label(String text, float size, int color, boolean bold) {
+        TextView t = new TextView(this);
+        t.setText(text);
+        t.setTextSize(size);
+        t.setTextColor(color);
+        t.setTypeface(Typeface.DEFAULT, bold ? Typeface.BOLD : Typeface.NORMAL);
+        t.setGravity(Gravity.CENTER_VERTICAL);
+        return t;
     }
 
-    private void showNotifications() { new AlertDialog.Builder(this).setTitle("Oznámení SOMSI").setMessage("3 nové události\n\n• Nová zpráva v chatu\n• Aktualizace zakázky\n• Nový záznam v dokumentech").setPositiveButton("OK", null).show(); }
+    private LinearLayout.LayoutParams margin(int l, int t, int r, int b) {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+        p.setMargins(dp(l), dp(t), dp(r), dp(b));
+        return p;
+    }
+
+    private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
+
     private void showMenu() {
         final String[] items = {"🌐  Webové stránky SOMSI", "📞  Zavolat", "💬  Chat", "📷  Fotodokumentace", "📋  Zakázky", "👤  Adresář", "ℹ️  O aplikaci"};
-        new AlertDialog.Builder(this).setTitle("SOMSI stavební práce").setItems(items, (d, which) -> { switch (which) { case 0: openWeb(); break; case 1: callPhone(); break; case 2: showChat(); break; case 3: openCamera(); break; case 4: openSection("Zakázky"); break; case 5: openSection("Adresář"); break; default: showAbout(); } }).setNegativeButton("Zavřít", null).show();
+        new AlertDialog.Builder(this).setTitle("SOMSI stavební práce").setItems(items, (d, which) -> {
+            switch (which) { case 0: openWeb(); break; case 1: callPhone(); break; case 2: showChat(); break; case 3: openCamera(); break; case 4: openSection("Zakázky"); break; case 5: openSection("Adresář"); break; default: showAbout(); }
+        }).setNegativeButton("Zavřít", null).show();
     }
-    private void showAbout() { new AlertDialog.Builder(this).setTitle("SOMSI stavební práce").setMessage("Od základu po střechu\n\nAplikace SOMSI pro zakázky, fotodokumentaci, stavební deník, úkoly, docházku, materiál, dokumenty, adresář a komunikaci.").setPositiveButton("OK", null).show(); }
+
+    private void showAbout() {
+        new AlertDialog.Builder(this).setTitle("SOMSI stavební práce")
+            .setMessage("Od základu po střechu\n\nAplikace SOMSI pro zakázky, fotodokumentaci, stavební deník, úkoly, docházku, materiál, dokumenty, adresář a komunikaci.")
+            .setPositiveButton("OK", null).show();
+    }
+
     private void callPhone() { try { startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + PHONE))); } catch (Throwable e) { Toast.makeText(this, "Telefon není dostupný", Toast.LENGTH_SHORT).show(); } }
     private void openWeb() { try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(WEB))); } catch (Throwable e) { Toast.makeText(this, "Web nelze otevřít", Toast.LENGTH_SHORT).show(); } }
     private void openCamera() { try { startActivity(new Intent(MediaStore.ACTION_IMAGE_CAPTURE)); } catch (Throwable e) { Toast.makeText(this, "Fotoaparát není dostupný", Toast.LENGTH_SHORT).show(); } }
-    private TextView text(String s, int sp, int color, boolean bold) { TextView t = new TextView(this); t.setText(s); t.setTextSize(sp); t.setTextColor(color); t.setTypeface(android.graphics.Typeface.DEFAULT, bold ? 1 : 0); t.setPadding(0,4,0,4); return t; }
 
     private void openSection(String title) {
-        LinearLayout page = new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL); page.setBackgroundColor(BG); page.setPadding(22,22,22,22);
-        LinearLayout header = new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL); TextView back = text("‹",38,GOLD,true); back.setGravity(Gravity.CENTER); back.setOnClickListener(v -> showHomeSafely());
-        header.addView(back,new LinearLayout.LayoutParams(58,62)); header.addView(text(title,24,Color.WHITE,true),new LinearLayout.LayoutParams(0,62,1)); page.addView(header);
-        ScrollView scroll = new ScrollView(this); LinearLayout list = new LinearLayout(this); list.setOrientation(LinearLayout.VERTICAL); String[] lines;
+        ScrollView scroll = new ScrollView(this);
+        LinearLayout page = new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL); page.setPadding(dp(18), dp(18), dp(18), dp(24)); page.setBackgroundColor(BG); scroll.addView(page);
+        LinearLayout header = new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL);
+        Button back = smallButton("‹"); back.setOnClickListener(v -> showHome()); header.addView(back, new LinearLayout.LayoutParams(dp(54), dp(54)));
+        header.addView(label(title, 23, Color.WHITE, true), new LinearLayout.LayoutParams(0, dp(54), 1)); page.addView(header, margin(0,0,0,14));
+        String[] lines;
         switch(title){ case "Zakázky": lines=new String[]{"Aktivní zakázky • 86","Rekonstrukce domu – Třemošnice","Hrubá stavba – Pardubice","Fasáda – Vysočina","Plánované realizace – 12"}; break; case "Stavební deník": lines=new String[]{"Dnešní záznam","Postup prací","Fotografie","Poznámky stavby","Přidat nový záznam"}; break; case "Úkoly": lines=new String[]{"Dnešní úkoly","Kontrola materiálu","Dokončit omítky","Objednat okna","Kontrola předání"}; break; case "Docházka": lines=new String[]{"Dnešní docházka","Přihlásit příchod","Přihlásit odchod","Historie docházky"}; break; case "Materiál": lines=new String[]{"Sklad a materiál","Cement • 48 ks","Izolace • 24 balení","Dlažba • 36 m²","Přidat materiál"}; break; case "Dokumenty": lines=new String[]{"Dokumenty zakázek","Smlouvy","Rozpočty","Předávací protokoly","Faktury"}; break; case "Adresář": lines=new String[]{"Kontakty","SOMSI – kancelář","Stavbyvedoucí","Dodavatelé","Klienti"}; break; default: lines=new String[]{"Přehled","Nový záznam","Historie","Nastavení"}; }
-        for(String line:lines) list.addView(actionButton(line,()->{})); scroll.addView(list); page.addView(scroll,new LinearLayout.LayoutParams(-1,0,1)); setContentView(page); configureWindow();
+        for (String line : lines) { Button b = actionButton(line, Color.WHITE); b.setGravity(Gravity.CENTER_VERTICAL); b.setOnClickListener(v -> Toast.makeText(this, line + " – připraveno", Toast.LENGTH_SHORT).show()); page.addView(b, margin(0,0,0,8)); }
+        setContentView(scroll); configureWindow();
     }
 
     private void showChat() {
-        LinearLayout page=new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL); page.setBackgroundColor(BG); page.setPadding(18,18,18,12); LinearLayout header=new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL); TextView back=text("‹",38,GOLD,true); back.setOnClickListener(v->showHomeSafely()); header.addView(back,new LinearLayout.LayoutParams(58,62)); header.addView(text("Chat SOMSI",24,Color.WHITE,true),new LinearLayout.LayoutParams(0,62,1)); page.addView(header);
-        TextView messages=text("Petr • 09:12\nZakázka Třemošnice – práce pokračují podle plánu.\n\nVy • 09:18\nDěkuji, potvrzuji.\n\nJana • 09:26\nNové fotografie jsou nahrané.",16,Color.WHITE,false); messages.setBackgroundColor(PANEL); messages.setPadding(18,18,18,18); page.addView(messages,new LinearLayout.LayoutParams(-1,0,1));
-        LinearLayout compose=new LinearLayout(this); EditText input=new EditText(this); input.setHint("Napište zprávu…"); input.setTextColor(Color.WHITE); input.setHintTextColor(Color.GRAY); compose.addView(input,new LinearLayout.LayoutParams(0,60,1)); Button send=actionButton("Odeslat",()->{}); send.setOnClickListener(v->{ if(input.getText().length()>0){ messages.append("\n\nVy • nyní\n"+input.getText()); input.setText(""); }}); compose.addView(send,new LinearLayout.LayoutParams(120,60)); page.addView(compose); setContentView(page); configureWindow();
+        LinearLayout page=new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL); page.setPadding(dp(18),dp(18),dp(18),dp(12)); page.setBackgroundColor(BG);
+        LinearLayout header=new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL); Button back=smallButton("‹"); back.setOnClickListener(v->showHome()); header.addView(back,new LinearLayout.LayoutParams(dp(54),dp(54))); header.addView(label("Chat SOMSI",23,Color.WHITE,true),new LinearLayout.LayoutParams(0,dp(54),1)); page.addView(header,margin(0,0,0,10));
+        TextView messages=label("Petr • 09:12\nZakázka Třemošnice – práce pokračují podle plánu.\n\nVy • 09:18\nDěkuji, potvrzuji.\n\nJana • 09:26\nNové fotografie jsou nahrané.",16,Color.WHITE,false); messages.setBackgroundColor(PANEL); messages.setPadding(dp(16),dp(16),dp(16),dp(16)); page.addView(messages,new LinearLayout.LayoutParams(-1,0,1));
+        LinearLayout compose=new LinearLayout(this); EditText input=new EditText(this); input.setHint("Napište zprávu…"); input.setTextColor(Color.WHITE); input.setHintTextColor(Color.GRAY); compose.addView(input,new LinearLayout.LayoutParams(0,dp(58),1)); Button send=actionButton("Odeslat",GOLD); send.setOnClickListener(v->{if(input.getText().length()>0){messages.append("\n\nVy • nyní\n"+input.getText());input.setText("");}}); compose.addView(send,new LinearLayout.LayoutParams(dp(110),dp(58))); page.addView(compose,margin(0,8,0,0)); setContentView(page); configureWindow();
     }
-
-    private void newRecord() { final String[] items={"Nová zakázka","Nová fotografie","Nový záznam deníku","Nový úkol","Nový materiál","Nový dokument"}; new AlertDialog.Builder(this).setTitle("Nový záznam").setItems(items,(d,which)->{ if(which==1) openCamera(); else Toast.makeText(this,items[which]+" – připraveno",Toast.LENGTH_SHORT).show(); }).setNegativeButton("Zrušit",null).show(); }
 }
-
-// Final verification trigger: application source unchanged.
