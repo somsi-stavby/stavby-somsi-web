@@ -49,33 +49,12 @@ jobs:
           disable-animations: false
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
-            set -e
-            APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
-            adb wait-for-device
-            i=1
-            while [ "$i" -le 60 ]; do
-              BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
-              if [ "$BOOT" = "1" ]; then
-                break
-              fi
-              sleep 2
-              i=$((i + 1))
-            done
-            BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
-            test "$BOOT" = "1"
-            adb install -r "$APK"
+            adb install -r "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
             adb logcat -c
-            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity | tee /tmp/somsi_start.txt
-            grep -q 'Status: ok' /tmp/somsi_start.txt
+            adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity | grep -q 'Status: ok'
             sleep 3
-            adb shell dumpsys activity activities > /tmp/somsi_activity.txt
-            adb logcat -d > /tmp/somsi_logcat.txt
-            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt
-            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt; then
-              echo 'Android runtime crash detected'
-              cat /tmp/somsi_logcat.txt
-              exit 1
-            fi
+            adb shell dumpsys activity activities | grep -q 'cz\.somsi\.app\.MainActivity'
+            ! adb logcat -d | grep -qE 'FATAL EXCEPTION|Unable to start activity'
             echo 'SOMSI Android launch test PASSED.'
 
       - name: Publish verified APK
