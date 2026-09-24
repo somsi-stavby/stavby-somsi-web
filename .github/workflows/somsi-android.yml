@@ -48,19 +48,17 @@ jobs:
           emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
             set -e
-            adb install -r "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
+            APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
+            adb install -r "$APK"
             adb logcat -c
             adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity > /tmp/somsi_start.txt 2>&1
             cat /tmp/somsi_start.txt
             sleep 5
             adb shell dumpsys activity activities > /tmp/somsi_activity.txt
             adb logcat -d > /tmp/somsi_logcat.txt
-            grep -q 'Status: ok' /tmp/somsi_start.txt
-            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt; then
-              cat /tmp/somsi_logcat.txt
-              exit 1
-            fi
-            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt
+            grep -q 'Status: ok' /tmp/somsi_start.txt || { echo 'MainActivity did not report Status: ok'; exit 1; }
+            grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt || { echo 'MainActivity is not active'; cat /tmp/somsi_activity.txt; exit 1; }
+            grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt && { echo 'Android runtime crash detected'; cat /tmp/somsi_logcat.txt; exit 1; } || true
             echo 'SOMSI Android launch test PASSED.'
 
       - name: Publish verified APK
