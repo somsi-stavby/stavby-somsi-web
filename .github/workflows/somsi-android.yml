@@ -52,12 +52,17 @@ jobs:
             set -e
             APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
             adb wait-for-device
-            for i in {1..60}; do
+            i=1
+            while [ "$i" -le 60 ]; do
               BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
-              if [ "$BOOT" = "1" ]; then break; fi
+              if [ "$BOOT" = "1" ]; then
+                break
+              fi
               sleep 2
+              i=$((i + 1))
             done
-            test "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1"
+            BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
+            test "$BOOT" = "1"
             adb install -r "$APK"
             adb logcat -c
             adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity | tee /tmp/somsi_start.txt
