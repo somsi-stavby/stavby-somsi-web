@@ -49,6 +49,25 @@ jobs:
           script: |
             set -e
             APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
+
+            # The runner can report the emulator as booted before ADB is usable.
+            # Wait explicitly for a responsive device before any adb install/start call.
+            adb start-server >/dev/null 2>&1 || true
+            for i in $(seq 1 60); do
+              STATE="$(adb get-state 2>/dev/null || true)"
+              BOOT="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+              if [ "$STATE" = "device" ] && [ "$BOOT" = "1" ]; then
+                break
+              fi
+              if [ "$i" = "60" ]; then
+                echo "ADB did not become ready: state=$STATE boot=$BOOT"
+                adb devices -l || true
+                exit 1
+              fi
+              sleep 2
+            done
+
+            adb wait-for-device
             adb install -r "$APK"
             adb logcat -c
             adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity > /tmp/somsi_start.txt 2>&1
