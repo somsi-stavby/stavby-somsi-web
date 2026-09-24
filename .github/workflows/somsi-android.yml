@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,13 +47,13 @@ jobs:
           if-no-files-found: error
       - name: Android runtime smoke test
         uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 10
+        timeout-minutes: 15
         with:
           api-level: 35
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect'
+          emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
           script: |
             set -uo pipefail
             APK=android/app/build/outputs/apk/debug/app-debug.apk
@@ -61,25 +61,31 @@ jobs:
             adb logcat -c
             adb shell am force-stop cz.somsi.stavby || true
             START_OUTPUT=$(adb shell am start -W -n cz.somsi.stavby/cz.somsi.app.MainActivity 2>&1 || true)
+            echo '--- AM START ---'
             echo "$START_OUTPUT"
-            sleep 5
+            sleep 8
             adb shell dumpsys activity activities > /tmp/somsi-activity.txt || true
+            adb shell dumpsys package cz.somsi.stavby > /tmp/somsi-package.txt || true
             adb logcat -d > /tmp/somsi-logcat.txt || true
             echo '--- ACTIVITY STATE ---'
-            grep -E 'mResumedActivity|cz\.somsi\.stavby|cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt || true
+            grep -E 'mResumedActivity|mFocusedApp|cz\.somsi\.stavby|cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt || true
             echo '--- CRASH CHECK ---'
-            grep -E 'FATAL EXCEPTION|AndroidRuntime.*FATAL|Process: cz\.somsi\.stavby' /tmp/somsi-logcat.txt || true
-            if grep -q 'FATAL EXCEPTION' /tmp/somsi-logcat.txt; then
+            grep -E 'FATAL EXCEPTION|AndroidRuntime.*FATAL|Process: cz\.somsi\.stavby|Unable to start activity' /tmp/somsi-logcat.txt || true
+            echo '--- APP PACKAGE ---'
+            grep -E 'versionName|versionCode|cz\.somsi\.app\.MainActivity' /tmp/somsi-package.txt || true
+            if grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi-logcat.txt; then
               echo 'SOMSI crashed during runtime test.'
               cat /tmp/somsi-logcat.txt
               exit 1
             fi
             if ! echo "$START_OUTPUT" | grep -q 'Status: ok'; then
               echo 'Android did not report a successful Activity start.'
+              cat /tmp/somsi-logcat.txt
               exit 1
             fi
             if ! grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi-activity.txt; then
               echo 'SOMSI MainActivity is not present in the active Android task.'
+              cat /tmp/somsi-logcat.txt
               exit 1
             fi
             echo 'SOMSI runtime smoke test passed.'
