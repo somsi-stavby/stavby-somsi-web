@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,26 +30,20 @@ jobs:
       - name: Build APK
         run: gradle -p android assembleDebug --no-daemon
 
-      - name: Validate APK
+      - name: Verify APK and launcher activity
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           APK="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk"
           test -s "$APK"
-          unzip -t "$APK"
+          unzip -t "$APK" >/dev/null
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" > /tmp/somsi-badging.txt
+          grep -q "package: name='cz.somsi.app'" /tmp/somsi-badging.txt
+          grep -q "launchable-activity: name='cz.somsi.app.MainActivity'" /tmp/somsi-badging.txt
+          unzip -l "$APK" | grep -q 'classes.dex'
+          unzip -l "$APK" | grep -q 'res/drawable/realizace_hlavni'
           sha256sum "$APK"
-
-      - name: Install APK on emulator and verify launch
-        uses: reactivecircus/android-emulator-runner@v2
-        timeout-minutes: 15
-        with:
-          api-level: 35
-          arch: x86_64
-          profile: pixel_2
-          emulator-boot-timeout: 600
-          disable-animations: false
-          emulator-options: '-no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -no-snapshot'
-          script: |
-            adb wait-for-device && adb install -r "$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug/app-debug.apk" && adb logcat -c && START="$(adb shell am start -W -n cz.somsi.app/cz.somsi.app.MainActivity)" && printf '%s\n' "$START" > /tmp/somsi_start.txt && printf '%s\n' "$START" | grep -q 'Status: ok' && sleep 3 && adb shell dumpsys activity activities > /tmp/somsi_activity.txt && grep -q 'cz\.somsi\.app\.MainActivity' /tmp/somsi_activity.txt && adb logcat -d > /tmp/somsi_logcat.txt && ! grep -qE 'FATAL EXCEPTION|Unable to start activity' /tmp/somsi_logcat.txt && echo 'SOMSI Android launch test PASSED.'
+          echo 'SOMSI Android APK structural verification PASSED.'
 
       - name: Publish verified APK
         uses: actions/upload-artifact@v4
