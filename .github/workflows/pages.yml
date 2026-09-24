@@ -14,7 +14,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -43,12 +43,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Restore SOMSI reference image
-        run: |
-          set -e
-          mkdir -p android/app/src/main/res/drawable-nodpi
-          cat android/refchunks/*.b64 | tr -d '\n\r' | base64 -d > android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
-          test -s android/app/src/main/res/drawable-nodpi/somsi_home_reference.webp
       - name: Build SOMSI Android APK
         run: gradle -p android assembleDebug --no-daemon
       - name: Validate SOMSI APK
@@ -58,9 +52,27 @@ jobs:
           test -s "$APK"
           unzip -t "$APK"
           sha256sum "$APK"
+      - name: Install and launch SOMSI APK in Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -e
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am force-stop cz.somsi.app
+            adb shell am start -n cz.somsi.app/.MainActivity
+            sleep 5
+            adb shell pidof cz.somsi.app
+            adb shell dumpsys activity activities | grep -F "cz.somsi.app/.MainActivity"
+            if adb logcat -d | grep -E "FATAL EXCEPTION|Process: cz.somsi.app"; then exit 1; fi
       - name: Publish SOMSI APK
         uses: actions/upload-artifact@v4
         with:
-          name: STAVBY-SOMSI-APK-latest
+          name: STAVBY-SOMSI-APK-verified
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
